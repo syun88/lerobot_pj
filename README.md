@@ -143,16 +143,6 @@ node.publish_action(action)
 - 3点: ペグがソケットに整列して接触
 - 4点: ペグをソケットに挿入成功
 
-## トラブルシューティング
-
-### GPUレンダリングの問題
-
-MuJoCoがGPUレンダリングに問題がある場合、以下の設定を確認してください：
-
-```python
-import os
-os.environ['MUJOCO_GL'] = 'egl'
-```
 
 ### カメラ画像が表示されない場合
 
