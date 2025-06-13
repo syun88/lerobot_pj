@@ -1,160 +1,306 @@
-# ALOHA ROS2 シミュレーション環境
+# ALOHA環境での学習方法
 
-このプロジェクトは、ALOHA（双腕ロボット）のシミュレーション環境をROS2（Humble）で統合したものです。gym-aloha環境をROS2ノードとして実行し、ロボットの状態情報やカメラ画像をROS2トピックとして配信します。
-
-## 概要
-
-ALOHAは、双腕ロボット（ViperX 300s）を使用したマニピュレーションタスクのためのシミュレーション環境です。以下のタスクが利用可能です：
-
-- **TransferCubeTask**: 右腕で赤いキューブを拾い上げ、左腕のグリッパーに移動させるタスク
-- **InsertionTask**: 左右の腕でソケットとペグをそれぞれ拾い上げ、空中で挿入するタスク
+このディレクトリには、ALOHA環境で強化学習を実行するためのスクリプトが含まれています。
 
 ## プロジェクト構造
 
 ```
 lerobot_pj/
+├── gym_aloha_ros_humble/              # ROS2パッケージ（メインディレクトリ）
+│   ├── gym_aloha_ros_humble/          # Pythonモジュール
+│   │   ├── train.py                   # 基本的な学習スクリプト
+│   │   ├── train_ppo.py               # PPO学習スクリプト
+│   │   ├── visualize_training.py      # 学習結果可視化
+│   │   └── simulator_node.py          # ROS2シミュレータノード
+│   ├── install_dependencies.sh        # 依存関係インストール
+│   ├── best_model/                    # 学習済みモデル保存
+│   │   └── best_model.zip
+│   ├── logs/                          # 学習ログ
+│   │   └── evaluations.npz
+│   ├── tensorboard_logs/              # TensorBoardログ
+│   │   ├── PPO_1/
+│   │   └── PPO_2/
+│   ├── test/                          # テストファイル
+│   ├── resource/                      # リソースファイル
+│   ├── package.xml                    # ROS2パッケージ設定
+│   ├── setup.py                       # Pythonパッケージ設定
+│   ├── setup.cfg                      # セットアップ設定
+│   ├── ppo_aloha_final.zip            # 学習済みPPOモデル
+│   └── LEARNING_README.md             # 学習用README
 ├── src/
-│   ├── gym_aloha_ros_humble/     # ROS2パッケージ
-│   └── gym-aloha/                # gym-aloha環境
-├── build/                        # ビルドディレクトリ
-├── install/                      # インストールディレクトリ
-└── log/                         # ログディレクトリ
+│   └── gym-aloha/                     # Gym環境パッケージ
+│       ├── gym_aloha/                 # Gym環境モジュール
+│       │   ├── env.py                 # メイン環境クラス
+│       │   ├── constants.py           # 定数定義
+│       │   ├── utils.py               # ユーティリティ関数
+│       │   ├── tasks/                 # タスク定義
+│       │   │   ├── sim.py
+│       │   │   └── sim_end_effector.py
+│       │   └── assets/                # 3Dモデルとアセット
+│       ├── tests/                     # テストファイル
+│       ├── example.py                 # 使用例
+│       ├── pyproject.toml             # Pythonプロジェクト設定
+│       ├── poetry.lock                # Poetry依存関係ロック
+│       └── README.md                  # Gym環境README
+├── build/                             # ビルドディレクトリ
+│   └── gym_aloha_ros_humble/         # ビルドされたパッケージ
+├── install/                           # インストールディレクトリ
+│   ├── gym_aloha_ros_humble/         # インストールされたパッケージ
+│   ├── setup.bash                     # セットアップスクリプト
+│   └── local_setup.bash              # ローカルセットアップスクリプト
+├── log/                               # ROS2ログ
+│   └── build_*/                       # ビルドログ
+└── README.md                          # このファイル
 ```
-
-## 前提条件
-
-- Ubuntu 22.04
-- ROS2 Humble
-- Python 3.10
-- MuJoCo 2.3.7以上
 
 ## セットアップ
 
-### 1. 依存関係のインストール
+### 1. ROS2環境の準備
 
 ```bash
+# ROS2 Humbleの環境設定
+source /opt/ros/humble/setup.bash
 
-# 必要なパッケージのインストール
-pip install gym-aloha
-pip install opencv-python
-```
-
-### 2. ROS2ワークスペースのビルド
-
-```bash
-# ワークスペースのルートディレクトリで
-colcon build
+# ワークスペースのビルド
+colcon build --packages-select gym_aloha_ros_humble
 source install/setup.bash
 ```
 
-## 使用方法
-
-### シミュレーターノードの起動
+### 2. 依存関係のインストール
 
 ```bash
+# インストールスクリプトを実行
+cd gym_aloha_ros_humble
+chmod +x install_dependencies.sh
+./install_dependencies.sh
+```
+
+または、手動でインストール：
+
+```bash
+pip install stable-baselines3[extra] imageio matplotlib tensorboard tqdm pandas seaborn
+```
+
+### 3. 環境の確認
+
+```bash
+# ALOHA環境が利用可能か確認
+python3 -c "import gym_aloha; print('ALOHA環境が利用可能です')"
+```
+
+## 学習の実行
+
+### 1. 基本的な学習（ランダムエージェント・Q-Learning）
+
+```bash
+cd gym_aloha_ros_humble
+python3 gym_aloha_ros_humble/train.py
+```
+
+選択肢：
+- **1**: ランダムエージェント（100エピソード）
+- **2**: Q-Learningエージェント（200エピソード）
+- **3**: デモ動画の録画
+
+### 2. PPO（Proximal Policy Optimization）学習
+
+```bash
+cd gym_aloha_ros_humble
+python3 gym_aloha_ros_humble/train_ppo.py
+```
+
+選択肢：
+- **1**: PPOで学習（100万ステップ）
+- **2**: 学習済みモデルのテスト
+- **3**: 学習済みモデルでデモ録画
+
+### 3. 学習結果の可視化
+
+```bash
+cd gym_aloha_ros_humble
+python3 gym_aloha_ros_humble/visualize_training.py
+```
+
+選択肢：
+- **1**: エピソード報酬のプロット
+- **2**: Stable-Baselines3ログのプロット
+- **3**: 学習結果の詳細分析
+- **4**: 複数モデルの比較
+
+## 学習パラメータの調整
+
+### PPO学習のパラメータ
+
+`train_ppo.py`の以下のパラメータを調整できます：
+
+```python
+model = PPO(
+    "MlpPolicy",
+    env,
+    verbose=1,
+    learning_rate=3e-4,    # 学習率
+    n_steps=2048,          # バッチサイズ
+    batch_size=64,         # ミニバッチサイズ
+    n_epochs=10,           # エポック数
+    gamma=0.99,            # 割引率
+    gae_lambda=0.95,       # GAEパラメータ
+    clip_range=0.2,        # クリップ範囲
+    tensorboard_log="./tensorboard_logs/"
+)
+```
+
+### 学習ステップ数の調整
+
+```python
+model.learn(
+    total_timesteps=1000000,  # 学習ステップ数
+    callback=eval_callback,
+    progress_bar=True
+)
+```
+
+## 学習の監視
+
+### TensorBoardでの監視
+
+```bash
+# 学習中にTensorBoardを起動
+cd gym_aloha_ros_humble
+tensorboard --logdir ./tensorboard_logs/
+
+# ブラウザで http://localhost:6006 にアクセス
+```
+
+### ログファイルの確認
+
+学習中に以下のディレクトリにログが保存されます：
+- `./logs/`: 学習ログ（CSV形式）
+- `./best_model/`: 最良モデル
+- `./tensorboard_logs/`: TensorBoardログ
+
+## 学習済みモデルの使用
+
+### モデルの保存と読み込み
+
+```python
+# モデルの保存
+model.save("my_trained_model")
+
+# モデルの読み込み
+from stable_baselines3 import PPO
+model = PPO.load("my_trained_model")
+```
+
+### 学習済みモデルでの推論
+
+```python
+# 環境の作成
+env = gym.make("gym_aloha/AlohaTransferCube-v0", obs_type="pixels_agent_pos")
+
+# 推論
+observation, info = env.reset()
+for step in range(1000):
+    action, _ = model.predict(observation, deterministic=True)
+    observation, reward, terminated, truncated, info = env.step(action)
+    
+    if terminated or truncated:
+        observation, info = env.reset()
+```
+
+## ROS2との連携
+
+### シミュレータノードの実行
+
+```bash
+# ROS2ノードとして実行
 ros2 run gym_aloha_ros_humble simulator_node
 ```
 
-このコマンドにより、以下のROS2トピックが利用可能になります：
+### 学習済みモデルをROSノードで使用
 
-- `/joint_states` (sensor_msgs/JointState): ロボットの関節状態
-- `/camera/image_raw` (sensor_msgs/Image): カメラ画像
-- `/reward` (std_msgs/Float32MultiArray): 報酬情報
-- `/action_cmd` (std_msgs/Float32MultiArray): アクションコマンド（購読）
+学習済みモデルをROSノードで使用する場合：
 
-### 可視化ツールの使用
-
-#### RQTを使用した画像表示
-
-```bash
-rqt
-```
-
-RQTを起動し、Plugins > Visualization > Image View を選択してカメラ画像を表示できます。
-
-#### RVizを使用した可視化
-
-```bash
-rviz2
-```
-
-RVizで以下の設定を行ってください：
-- Fixed Frame: `world`
-- Add > By topic > `/joint_states` > RobotModel
-(開発中)
-- Add > By topic > `/camera/image_raw` > Image
-
-### アクションの送信
-
-外部ノードからアクションを送信する場合：
+1. モデルを読み込み
+2. `simulator_node.py`の`on_action`メソッドで推論を実行
+3. 推論結果をアクションとして送信
 
 ```python
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray
-import numpy as np
-
-class ActionPublisher(Node):
-    def __init__(self):
-        super().__init__('action_publisher')
-        self.publisher = self.create_publisher(Float32MultiArray, 'action_cmd', 10)
-        
-    def publish_action(self, action):
-        msg = Float32MultiArray()
-        msg.data = action.tolist()
-        self.publisher.publish(msg)
-
-# 使用例
-rclpy.init()
-node = ActionPublisher()
-action = np.random.random(14)  # 14次元のアクション
-node.publish_action(action)
+# simulator_node.pyでの使用例
+def on_action(self, msg: Float32MultiArray):
+    # 学習済みモデルで推論
+    action, _ = self.model.predict(self.obs, deterministic=True)
+    self.next_action = action
 ```
 
-## アクション空間
+## トラブルシューティング
 
-アクションは14次元のベクトルで構成されています：
+### よくある問題
 
-- 左腕の関節位置（6次元）
-- 左グリッパーの位置（1次元、0:閉じる、1:開く）
-- 右腕の関節位置（6次元）
-- 右グリッパーの位置（1次元、0:閉じる、1:開く）
+1. **ImportError: No module named 'gym_aloha'**
+   ```bash
+   # ワークスペースをビルドしてソース
+   colcon build --packages-select gym_aloha_ros_humble
+   source install/setup.bash
+   ```
 
-## 観測空間
+2. **ROS2パッケージが見つからない**
+   ```bash
+   # パッケージのビルドとソース
+   colcon build --packages-select gym_aloha_ros_humble
+   source install/setup.bash
+   ```
 
-観測は以下の情報を含みます：
+3. **CUDAエラー**
+   ```bash
+   # CPUのみで実行
+   export CUDA_VISIBLE_DEVICES=""
+   ```
 
-- `qpos`: ロボットの関節位置とグリッパー位置
-- `qvel`: ロボットの関節速度とグリッパー速度
-- `images`: 複数のカメラアングルからの画像
-- `env_state`: 環境の状態情報（オブジェクトの位置など）
+4. **メモリ不足**
+   - バッチサイズを小さくする
+   - 学習ステップ数を減らす
 
-## 報酬システム
+### パフォーマンスの最適化
 
-### TransferCubeTask
-- 1点: 右グリッパーでキューブを保持
-- 2点: 右グリッパーでキューブを持ち上げ
-- 3点: 左グリッパーにキューブを移動
-- 4点: テーブルに触れずに成功
+1. **GPU使用**
+   ```bash
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   ```
 
-### InsertionTask
-- 1点: ペグとソケットの両方にグリッパーで接触
-- 2点: 両方を落とさずに把持
-- 3点: ペグがソケットに整列して接触
-- 4点: ペグをソケットに挿入成功
+2. **並列環境**
+   ```python
+   # 複数環境で並列学習
+   env = DummyVecEnv([make_env() for _ in range(4)])
+   ```
 
+## 開発環境のセットアップ
 
-### カメラ画像が表示されない場合
+### 新しい機能の追加
 
-RQTで画像が表示されない場合は、以下を確認してください：
-- シミュレーターノードが正常に起動しているか
-- トピック名が正しいか（`/camera/image_raw`）
-- 画像エンコーディングが`rgb8`になっているか
+1. `gym_aloha_ros_humble/gym_aloha_ros_humble/`にPythonファイルを追加
+2. `package.xml`と`setup.py`を更新
+3. ワークスペースをビルド
 
-## 開発向け情報
+```bash
+colcon build --packages-select gym_aloha_ros_humble
+source install/setup.bash
+```
 
-### タスクの追加
+### デバッグ
 
-新しいタスクを追加する場合は、`src/gym-aloha/gym_aloha/tasks/`ディレクトリに新しいタスククラスを作成し、`simulator_node.py`で環境を変更してください。
-gazebo　jointの設定など
+```bash
+# ROS2ログの確認
+ros2 log list
+ros2 log show /gym_aloha_ros_humble
 
+# ノードの状態確認
+ros2 node list
+ros2 node info /simulator_node
+```
+
+## 参考資料
+
+- [Stable-Baselines3 ドキュメント](https://stable-baselines3.readthedocs.io/)
+- [Gymnasium ドキュメント](https://gymnasium.farama.org/)
+- [ROS2 ドキュメント](https://docs.ros.org/en/humble/)
+- [ALOHA プロジェクト](https://github.com/tonyzhaozh/ALOHA) 
