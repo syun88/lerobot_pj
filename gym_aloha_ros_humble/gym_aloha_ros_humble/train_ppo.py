@@ -105,6 +105,13 @@ def test_model(model_path="ppo_aloha_final"):
     """学習済みモデルをテスト"""
     print(f"モデル {model_path} をテストします...")
     
+    # モデルファイルの存在チェック
+    import os
+    if not os.path.exists(f"{model_path}.zip"):
+        print(f"エラー: モデルファイル '{model_path}.zip' が見つかりません。")
+        print("まずオプション1でPPO学習を実行してモデルを作成してください。")
+        return
+    
     # モデルを読み込み
     model = PPO.load(model_path)
     
@@ -137,6 +144,13 @@ def record_trained_model(model_path="ppo_aloha_final"):
     """学習済みモデルでデモ動画を録画"""
     print(f"モデル {model_path} でデモ動画を録画します...")
     
+    # モデルファイルの存在チェック
+    import os
+    if not os.path.exists(f"{model_path}.zip"):
+        print(f"エラー: モデルファイル '{model_path}.zip' が見つかりません。")
+        print("まずオプション1でPPO学習を実行してモデルを作成してください。")
+        return
+    
     import imageio
     
     # モデルを読み込み
@@ -166,9 +180,11 @@ def record_trained_model(model_path="ppo_aloha_final"):
 
 if __name__ == "__main__":
     print("PPO学習スクリプト")
-    print("1. PPOで学習")
+    print("=" * 40)
+    print("1. PPOで学習（初回実行時はこちらを選択）")
     print("2. 学習済みモデルをテスト")
     print("3. 学習済みモデルでデモ録画")
+    print("=" * 40)
     
     choice = input("選択してください (1-3): ")
     
