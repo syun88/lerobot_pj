@@ -93,15 +93,15 @@ def train_ppo():
     )
     
     # モデルを保存
-    model.save("ppo_aloha_final")
-    print("学習完了！モデルを ppo_aloha_final に保存しました")
+    model.save("../ppo_aloha_final")
+    print("学習完了！モデルを ../ppo_aloha_final に保存しました")
     
     env.close()
     eval_env.close()
     
     return model
 
-def test_model(model_path="ppo_aloha_final"):
+def test_model(model_path="../ppo_aloha_final"):
     """学習済みモデルをテスト"""
     print(f"モデル {model_path} をテストします...")
     
@@ -140,7 +140,7 @@ def test_model(model_path="ppo_aloha_final"):
     env.close()
     print(f"テスト完了！平均報酬: {np.mean(total_rewards):.3f}")
 
-def record_trained_model(model_path="ppo_aloha_final"):
+def record_trained_model(model_path="../ppo_aloha_final"):
     """学習済みモデルでデモ動画を録画"""
     print(f"モデル {model_path} でデモ動画を録画します...")
     
