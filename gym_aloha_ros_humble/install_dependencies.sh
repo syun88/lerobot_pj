@@ -7,7 +7,7 @@ pip install stable-baselines3[extra]
 pip install imageio
 pip install matplotlib
 pip install tensorboard
-
+pip install japanize-matplotlib
 # 追加の便利なライブラリ
 pip install tqdm
 pip install pandas

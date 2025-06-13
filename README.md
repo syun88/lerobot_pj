@@ -78,7 +78,7 @@ chmod +x install_dependencies.sh
 または、手動でインストール：
 
 ```bash
-pip install stable-baselines3[extra] imageio matplotlib tensorboard tqdm pandas seaborn
+pip install stable-baselines3[extra] imageio matplotlib tensorboard tqdm pandas seaborn　japanize-matplotlib
 ```
 
 ### 3. 環境の確認
