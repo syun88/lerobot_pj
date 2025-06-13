@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
+import japanize_matplotlib
 import numpy as np
 import pandas as pd
 import os
